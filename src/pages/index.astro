@@ -1,11 +1,12 @@
 ---
-import { listPlaces } from "../lib/db";
+import { listMenuItemsByPlace, listPlaces } from "../lib/db";
 import { BUILDINGS, CUISINES, PRICE_RANGES } from "../lib/schema";
 import "../styles.css";
 
 const building = Astro.url.searchParams.get("building") ?? "";
 const cuisine = Astro.url.searchParams.get("cuisine") ?? "";
 const places = listPlaces({ building: building || undefined, cuisine: cuisine || undefined });
+const menuByPlace = listMenuItemsByPlace(places.map((place) => place.id));
 ---
 
 <!doctype html>
@@ -58,15 +59,63 @@ const places = listPlaces({ building: building || undefined, cuisine: cuisine ||
 
       <ul id="places">
         {
-          places.map((place) => (
-            <li>
-              <strong>{place.name}</strong> — {place.building}, {place.cuisine}, {place.priceRange}
-              {place.locationNote ? <span> ({place.locationNote})</span> : null}
-            </li>
-          ))
+          places.map((place) => {
+            const items = menuByPlace.get(place.id) ?? [];
+            return (
+              <li>
+                <strong>{place.name}</strong> — {place.building}, {place.cuisine}, {place.priceRange}
+                {place.locationNote ? <span> ({place.locationNote})</span> : null}
+                {place.menuSource ? (
+                  <p class="menu-caveat">
+                    Menu researched from {place.menuSource}, not confirmed by the venue
+                    {place.menuVerifiedAt ? <span> (as of {place.menuVerifiedAt})</span> : null} — treat prices and
+                    availability as unverified.
+                  </p>
+                ) : null}
+                {items.length > 0 && (
+                  <ul class="menu-items">
+                    {items.map((item) => (
+                      <li>
+                        {item.name}
+                        {item.price ? <span> — {item.price}</span> : null}
+                        {item.description ? <span> ({item.description})</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })
         }
       </ul>
       {places.length === 0 && <p>No places match that filter.</p>}
+
+      <h2>Add a menu item</h2>
+      {
+        places.length > 0 ? (
+          <form method="post" action="/api/menu-items">
+            <label for="placeId">Place</label>
+            <select id="placeId" name="placeId" required>
+              {places.map((place) => (
+                <option value={place.id}>{place.name}</option>
+              ))}
+            </select>
+
+            <label for="item-name">Item name</label>
+            <input id="item-name" name="name" required maxlength="200" />
+
+            <label for="item-price">Price</label>
+            <input id="item-price" name="price" maxlength="40" placeholder="e.g. $5.50, or leave blank" />
+
+            <label for="item-description">Description</label>
+            <input id="item-description" name="description" maxlength="280" />
+
+            <button>Add menu item</button>
+          </form>
+        ) : (
+          <p>Add a place first to attach menu items to it.</p>
+        )
+      }
 
       <h2>Add a place</h2>
       <form method="post" action="/api/places">

@@ -14,12 +14,38 @@ export const places = sqliteTable("places", {
   locationNote: text("location_note"),
   cuisine: text().notNull(),
   priceRange: text("price_range").notNull(),
+  // Provenance for menuItems below, set only on places whose menu was
+  // researched rather than submitted by a person — e.g. "Google Maps
+  // reviews and linked articles" — so the page can flag that data as
+  // unverified instead of presenting it as plain fact. Null for
+  // person-submitted places, which carry no such claim to caveat.
+  menuSource: text("menu_source"),
+  menuVerifiedAt: text("menu_verified_at"),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });
 
 export type Place = typeof places.$inferSelect;
+
+// One place has many menu items — see PLAN.md's per-item-menu note. price is
+// free text, not a number: real listings give prices as "$12.00", "~$3.50+",
+// "Included with coffee", or not at all (null), and forcing that into a
+// number would either lose information or fake precision that isn't there.
+export const menuItems = sqliteTable("menu_items", {
+  id: int().primaryKey({ autoIncrement: true }),
+  placeId: int("place_id")
+    .notNull()
+    .references(() => places.id, { onDelete: "cascade" }),
+  name: text().notNull(),
+  price: text(),
+  description: text(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type MenuItem = typeof menuItems.$inferSelect;
 
 // Fixed lists behind the form's <select>s — see PLAN.md's "controlled
 // vocabularies": free text on building/cuisine fragments a filter ("asian" vs
@@ -33,6 +59,10 @@ export const BUILDINGS = [
   "Marie Reay",
   "RSC",
   "JCSMR",
+  "Kambri",
+  "ANU Sport",
+  "University House",
+  "Coombs",
 ] as const;
 
 export const CUISINES = [

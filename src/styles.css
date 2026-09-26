@@ -43,3 +43,16 @@ button {
 #places li {
   margin-block-end: 0.4rem;
 }
+
+.menu-caveat {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #555;
+}
+
+.menu-items {
+  margin: 0.2rem 0 0.6rem;
+  padding-inline-start: 1.2rem;
+  font-size: 0.9rem;
+}
