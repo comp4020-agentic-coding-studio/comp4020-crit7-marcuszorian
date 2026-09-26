@@ -1,8 +1,11 @@
 ---
-import { listMessages } from "../lib/db";
+import { listPlaces } from "../lib/db";
+import { BUILDINGS, CUISINES, PRICE_RANGES } from "../lib/schema";
 import "../styles.css";
 
-const messages = listMessages();
+const building = Astro.url.searchParams.get("building") ?? "";
+const cuisine = Astro.url.searchParams.get("cuisine") ?? "";
+const places = listPlaces({ building: building || undefined, cuisine: cuisine || undefined });
 ---
 
 <!doctype html>
@@ -14,40 +17,82 @@ const messages = listMessages();
   </head>
   <body>
     <nav aria-label="site">
-      <a href="/">Guestbook</a>
+      <a href="/">Places</a>
       <a href="/readme/">About</a>
     </nav>
     <main>
-      <h1>Guestbook</h1>
+      <h1>Campus food finder</h1>
       <p>
-        A minimal full-stack starter: messages live in SQLite on the machine's
-        volume (state survives a reload and a redeploy), and new messages
-        appear in every open tab over a server-sent-events stream — open this
-        page twice and sign it in one. Replace all of this with your own
-        prototype.
+        A crowd-sourced directory of where to eat on campus: filter the list
+        below, or add a place you know about — it's here for everyone as soon
+        as you submit it.
       </p>
-      <form method="post" action="/api/messages">
-        <label for="body">Leave a message</label>
-        <input id="body" name="body" required maxlength="500" />
-        <button>Sign</button>
+
+      <form method="get" action="/">
+        <label for="filter-building">Building</label>
+        <select id="filter-building" name="building">
+          <option value="">All buildings</option>
+          {
+            BUILDINGS.map((option) => (
+              <option value={option} selected={option === building}>
+                {option}
+              </option>
+            ))
+          }
+        </select>
+
+        <label for="filter-cuisine">Cuisine</label>
+        <select id="filter-cuisine" name="cuisine">
+          <option value="">All cuisines</option>
+          {
+            CUISINES.map((option) => (
+              <option value={option} selected={option === cuisine}>
+                {option}
+              </option>
+            ))
+          }
+        </select>
+
+        <button>Filter</button>
       </form>
-      <ul id="messages">
-        {messages.map((message) => <li>{message.body}</li>)}
+
+      <ul id="places">
+        {
+          places.map((place) => (
+            <li>
+              <strong>{place.name}</strong> — {place.building}, {place.cuisine}, {place.priceRange}
+              {place.locationNote ? <span> ({place.locationNote})</span> : null}
+            </li>
+          ))
+        }
       </ul>
+      {places.length === 0 && <p>No places match that filter.</p>}
+
+      <h2>Add a place</h2>
+      <form method="post" action="/api/places">
+        <label for="name">Name</label>
+        <input id="name" name="name" required maxlength="200" />
+
+        <label for="building">Building</label>
+        <select id="building" name="building" required>
+          {BUILDINGS.map((option) => <option value={option}>{option}</option>)}
+        </select>
+
+        <label for="cuisine">Cuisine</label>
+        <select id="cuisine" name="cuisine" required>
+          {CUISINES.map((option) => <option value={option}>{option}</option>)}
+        </select>
+
+        <label for="priceRange">Price</label>
+        <select id="priceRange" name="priceRange" required>
+          {PRICE_RANGES.map((option) => <option value={option}>{option}</option>)}
+        </select>
+
+        <label for="locationNote">Location note</label>
+        <input id="locationNote" name="locationNote" maxlength="280" placeholder="e.g. ground floor, near the ANU bar" />
+
+        <button>Add place</button>
+      </form>
     </main>
-    <script>
-      // The live half of the demo: subscribe to the SSE stream and prepend
-      // messages as they arrive. The form itself needs none of this — its
-      // POST + redirect re-renders the submitting tab from SQLite; this
-      // stream is how every other tab finds out.
-      const list = document.querySelector("#messages");
-      const source = new EventSource("/api/events");
-      source.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = message.body;
-        list?.prepend(item);
-      });
-    </script>
   </body>
 </html>

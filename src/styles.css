@@ -23,7 +23,8 @@ form {
   margin-block: 1.5rem;
 }
 
-input {
+input,
+select {
   flex: 1;
   min-width: 12rem;
   padding: 0.4rem 0.6rem;
@@ -35,6 +36,10 @@ button {
   font: inherit;
 }
 
-#messages {
+#places {
   padding-inline-start: 1.2rem;
+}
+
+#places li {
+  margin-block-end: 0.4rem;
 }
