@@ -11,6 +11,10 @@ const board = allCards.map((card) => ({
 // Matching is symmetric, so each pair shows up once in each card's list.
 const pairCount = board.reduce((n, { matches }) => n + matches.length, 0) / 2;
 
+// Codes already on the board, offered as suggestions in the course code
+// field. Stored codes are already normalized, so a Set dedupes them.
+const courseCodes = [...new Set(allCards.map((card) => card.courseCode))].sort();
+
 // The highest possible score: identical tags plus every block shared.
 const MAX_SCORE = 100 + 10 * BLOCKS.length;
 
@@ -63,7 +67,18 @@ const hasBlock = (block: string) => (gridBlocks as readonly string[]).includes(b
           </div>
           <div class="field">
             <label for="courseCode">Course code</label>
-            <input id="courseCode" name="courseCode" required maxlength="20" placeholder="COMP4020" />
+            <input
+              id="courseCode"
+              name="courseCode"
+              required
+              maxlength="20"
+              placeholder="COMP4020"
+              list="course-codes"
+              autocomplete="off"
+            />
+            <datalist id="course-codes">
+              {courseCodes.map((code) => <option value={code} />)}
+            </datalist>
           </div>
         </div>
         <div class="field">
