@@ -1,47 +1,47 @@
 # Process overview
 
-<!-- DRAFT: this is a skeleton, not a finished account — the mechanical facts
-     are filled in, but the framing, the corrections you made, and the
-     prompts you actually gave are yours to add. Replace this comment once
-     you've done that. -->
+<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
+     in it with your own overview, and delete this comment — `pnpm
+     check:evidence` will remind you if it's still here. -->
+
+Written by you, for a reader: how you got from the brief to the harness and
+agentic workflow behind this submission. Markers read this file and follow its
+citations; they don't trawl the repo for evidence you didn't point at.
+
+This file is the shape; the course site's
+[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
+is the requirement, and its
+[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
+cover every deliverable.
 
 ## What I built
 
-A crowd-sourced campus food finder: a single directory of ANU eating places
-(name, building, cuisine, price range, optional location note), filterable by
-building and cuisine, with no accounts, ratings, or edit path — see PLAN.md
-for what's deliberately out of scope and why. Seeded with ten known campus
-places so the list isn't empty on first load.
+A sentence or two. `README.md` is where the account of what the app is and what
+good means here lives; this file is how you got there.
 
 ## How I got here
 
-The plan (`PLAN.md`) called for writing the two mechanically-checkable spec
-promises as failing tests before any implementation: that a submitted place
-survives a reload, and that filtering by building/cuisine narrows the list.
-[TODO: say why you wanted the tests red first, in your own words — what
-would have gone wrong if you'd built the feature before the test.]
+The account of the process: how the work actually went, and how you knew the
+result was right. Tell it in whatever order makes it clear. A weekly prototype
+needs a paragraph or two; an assignment needs more.
 
-- `spec/places.test.ts` was written and run against the unmodified starter,
-  confirming it failed for the right reason (`POST /api/places` 404ing, the
-  homepage still serving the guestbook) rather than a typo in the test
-  itself.
-- Schema, migration, db layer, API route, seed data, and the reworked
-  `index.astro` landed together in
-  [`57b2730`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit7-marcuszorian/commit/57b2730),
-  which also retired the guestbook's SSE plumbing (`events.ts`,
-  `api/messages.ts`, `api/events.ts`, `guestbook.test.ts`) now that it's
-  replaced.
-- `pnpm check` green after: typecheck clean, both new places tests passing,
-  invariants and readme checks unaffected.
+Cite the record as you go, as links whose text is the commit hash or range and
+whose target is this repo's commit or compare URL, so a reader clicks straight
+to the evidence:
 
-[TODO: quote the prompt(s) you actually gave that directed this work,
-curated rather than a full transcript, e.g.:]
+- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
+- a range:
+  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+
+To pair a prompt with the commit it produced, quote the prompt (curated, not a
+full transcript) next to the citation:
 
 > the prompt, verbatim
 
-[TODO: note any point where you corrected the agent's approach, or where you
-checked its output against the spec/plan yourself rather than taking it on
-trust.]
+Screenshots are welcome where one carries the point better than a sentence does.
+Commit the file to this repo and link it with a **relative** path, which is what
+makes it render on GitHub: `![alt text](docs/before.png)`. Images don't count
+towards the word count and don't replace the citation.
 
 ## Before you ship
 
