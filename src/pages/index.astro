@@ -221,4 +221,24 @@ const hasBlock = (block: string) => (gridBlocks as readonly string[]).includes(b
     idea.addEventListener("input", update);
     update();
   }
+
+  // The server rejects a card with no topic or no availability, but a raw
+  // 400 page throws away everything typed; catch it before submitting.
+  // Without JS the server's check still holds.
+  const form = document.querySelector<HTMLFormElement>("form.post-form");
+  const groups = [
+    { name: "tags", message: "Pick at least one topic." },
+    { name: "blocks", message: "Pick at least one time you're free." },
+  ];
+  if (form) {
+    const boxes = (name: string) => [...form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)];
+    const validate = () => {
+      for (const { name, message } of groups) {
+        const group = boxes(name);
+        group[0]?.setCustomValidity(group.some((box) => box.checked) ? "" : message);
+      }
+    };
+    form.addEventListener("change", validate);
+    validate();
+  }
 </script>
