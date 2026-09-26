@@ -82,6 +82,36 @@ describe("posting a card", () => {
     expect(article.textContent).toContain("web");
     expect(article.textContent).toContain("mon-am");
   });
+
+  it("broadcasts the new card over the SSE stream", async () => {
+    const live: CardInput = {
+      name: `Live ${suffix}`,
+      contact: `live-${suffix}@example.com`,
+      courseCode: "COMP4020",
+      idea: "SSE probe",
+      tags: ["web"],
+      blocks: ["mon-am"],
+    };
+
+    // subscribe first, then post, then read until the event arrives
+    const stream = await fetch(new URL("/api/events", baseUrl));
+    expect(stream.headers.get("content-type")).toContain("text/event-stream");
+    const reader = stream.body?.getReader();
+    if (!reader) throw new Error("no response body");
+
+    await postCard(live);
+
+    const decoder = new TextDecoder();
+    let received = "";
+    while (!received.includes(live.name)) {
+      const { value, done } = await reader.read();
+      if (done) throw new Error("stream ended before the event arrived");
+      received += decoder.decode(value, { stream: true });
+    }
+    await reader.cancel();
+    expect(received).toContain("data: ");
+    expect(received).toContain(live.name);
+  }, 10_000);
 });
 
 describe("matches", () => {
