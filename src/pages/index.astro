@@ -1,113 +1,209 @@
 ---
+import Base from "../layouts/Base.astro";
 import { listCards, rankMatches } from "../lib/db";
 import { BLOCKS, TAGS } from "../lib/schema";
-import "../styles.css";
 
 const allCards = listCards();
 const board = allCards.map((card) => ({
   card,
   matches: rankMatches(allCards, card.id),
 }));
+// Matching is symmetric, so each pair shows up once in each card's list.
+const pairCount = board.reduce((n, { matches }) => n + matches.length, 0) / 2;
+
+// The highest possible score: identical tags plus every block shared.
+const MAX_SCORE = 100 + 10 * BLOCKS.length;
+
+// Weekday blocks are "<day>-<slot>", e.g. "mon-am"; lay them out as a
+// day × slot grid. Anything else ("weekend") gets a toggle chip below it.
+const DAY_NAMES: Record<string, [string, string]> = {
+  mon: ["Mon", "Monday"],
+  tue: ["Tue", "Tuesday"],
+  wed: ["Wed", "Wednesday"],
+  thu: ["Thu", "Thursday"],
+  fri: ["Fri", "Friday"],
+};
+const SLOT_NAMES: Record<string, string> = { am: "Morning", pm: "Afternoon", eve: "Evening" };
+const gridBlocks = BLOCKS.filter((b) => b.includes("-"));
+const otherBlocks = BLOCKS.filter((b) => !b.includes("-"));
+const days = [...new Set(gridBlocks.map((b) => b.split("-")[0]!))];
+const slots = [...new Set(gridBlocks.map((b) => b.split("-")[1]!))];
+const hasBlock = (block: string) => (gridBlocks as readonly string[]).includes(block);
 ---
 
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Study/project matches</title>
-  </head>
-  <body>
-    <nav aria-label="site">
-      <a href="/">Board</a>
-      <a href="/readme/">About</a>
-    </nav>
-    <main>
-      <h1>Study/project matches</h1>
-      <p>
+<Base title="Study/project matches" wide>
+  <header class="hero full layout wide">
+    <div>
+      <h1>Find someone to build it with</h1>
+      <p class="lead">
         Post a card with your course, idea, topic tags and weekly
-        availability. You'll see who you're actually compatible with below —
+        availability. You'll see who you're actually compatible with —
         ranked by shared tags and overlapping availability, not just a flat
         list.
       </p>
+      <ul class="stats">
+        <li><strong>{allCards.length}</strong>{allCards.length === 1 ? "card" : "cards"}</li>
+        <li><strong>{pairCount}</strong>{pairCount === 1 ? "matching pair" : "matching pairs"}</li>
+      </ul>
+    </div>
+  </header>
 
-      <form method="post" action="/api/cards">
+  <div class="board-layout">
+    <section class="post-panel at-callout" aria-labelledby="post-heading">
+      <h2 id="post-heading">Post a card</h2>
+      <form class="post-form" method="post" action="/api/cards">
         <div class="field">
           <label for="name">Name</label>
-          <input id="name" name="name" required maxlength="100" />
+          <input id="name" name="name" required maxlength="100" autocomplete="name" />
         </div>
-        <div class="field">
-          <label for="contact">Contact</label>
-          <input id="contact" name="contact" required maxlength="100" placeholder="email or Discord handle" />
-        </div>
-        <div class="field">
-          <label for="courseCode">Course code</label>
-          <input id="courseCode" name="courseCode" required maxlength="20" placeholder="COMP4020" />
+        <div class="field-row">
+          <div class="field">
+            <label for="contact">Contact</label>
+            <input id="contact" name="contact" required maxlength="100" placeholder="email or Discord" />
+          </div>
+          <div class="field">
+            <label for="courseCode">Course code</label>
+            <input id="courseCode" name="courseCode" required maxlength="20" placeholder="COMP4020" />
+          </div>
         </div>
         <div class="field">
           <label for="idea">Idea</label>
-          <textarea id="idea" name="idea" required maxlength="280"></textarea>
+          <textarea id="idea" name="idea" required maxlength="280" aria-describedby="idea-hint"></textarea>
+          <p class="hint" id="idea-hint">
+            <span>What you want to build or study</span>
+            <span data-idea-count>up to 280</span>
+          </p>
         </div>
         <fieldset>
           <legend>Topics</legend>
-          {
-            TAGS.map((tag) => (
-              <label class="checkbox">
-                <input type="checkbox" name="tags" value={tag} /> {tag}
-              </label>
-            ))
-          }
+          <div class="chips">
+            {
+              TAGS.map((tag) => (
+                <label class="chip-toggle">
+                  <input type="checkbox" name="tags" value={tag} />
+                  {tag}
+                </label>
+              ))
+            }
+          </div>
         </fieldset>
         <fieldset>
           <legend>Availability</legend>
+          <table class="slots">
+            <thead>
+              <tr>
+                <td></td>
+                {slots.map((slot) => <th scope="col">{SLOT_NAMES[slot] ?? slot}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {
+                days.map((day) => (
+                  <tr>
+                    <th scope="row">{DAY_NAMES[day]?.[0] ?? day}</th>
+                    {slots.map((slot) => (
+                      <td>
+                        {hasBlock(`${day}-${slot}`) && (
+                          <label class="slot">
+                            <input type="checkbox" name="blocks" value={`${day}-${slot}`} />
+                            <span class="visually-hidden">
+                              {DAY_NAMES[day]?.[1] ?? day} {(SLOT_NAMES[slot] ?? slot).toLowerCase()}
+                            </span>
+                          </label>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
           {
-            BLOCKS.map((block) => (
-              <label class="checkbox">
-                <input type="checkbox" name="blocks" value={block} /> {block}
-              </label>
-            ))
+            otherBlocks.length > 0 && (
+              <div class="chips other-blocks">
+                {otherBlocks.map((block) => (
+                  <label class="chip-toggle">
+                    <input type="checkbox" name="blocks" value={block} />
+                    {block[0]!.toUpperCase() + block.slice(1)}
+                  </label>
+                ))}
+              </div>
+            )
           }
         </fieldset>
-        <button>Post card</button>
+        <div>
+          <button class="at-button">Post card</button>
+        </div>
       </form>
+    </section>
 
-      <section aria-label="cards">
-        {
-          board.map(({ card, matches }) => (
-            <article class="card">
-              <h2>{card.name}</h2>
-              <p class="meta">
-                {card.contact} · {card.courseCode}
-              </p>
-              <p>{card.idea}</p>
-              <ul class="tags">
-                {card.tags.map((tag) => (
-                  <li>{tag}</li>
-                ))}
-              </ul>
-              <ul class="blocks">
-                {card.blocks.map((block) => (
-                  <li>{block}</li>
-                ))}
-              </ul>
-              <div class="matches">
-                <h3>Matches</h3>
-                {matches.length === 0 ? (
-                  <p>No matches yet.</p>
-                ) : (
-                  <ul>
-                    {matches.map(({ card: match, score }) => (
-                      <li>
-                        {match.name} — {score.toFixed(1)}
-                      </li>
+    <section class="board" aria-label="cards">
+      {
+        board.length === 0 ? (
+          <div class="at-callout">
+            <p>No cards yet — post the first one.</p>
+          </div>
+        ) : (
+          <div class="card-list">
+            {board.map(({ card, matches }) => (
+              <article class="card at-card">
+                <header>
+                  <h2>{card.name}</h2>
+                  <span class="badge">{card.courseCode}</span>
+                </header>
+                <p class="contact">{card.contact}</p>
+                <p class="idea">{card.idea}</p>
+                <div class="facets">
+                  <ul class="chips tags" aria-label="topics">
+                    {card.tags.map((tag) => (
+                      <li class="chip">{tag}</li>
                     ))}
                   </ul>
-                )}
-              </div>
-            </article>
-          ))
-        }
-      </section>
-    </main>
-  </body>
-</html>
+                  <ul class="chips blocks" aria-label="availability">
+                    {card.blocks.map((block) => (
+                      <li class="chip teal">{block}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="matches">
+                  <h3>Matches</h3>
+                  {matches.length === 0 ? (
+                    <p class="empty">No matches yet.</p>
+                  ) : (
+                    <ol>
+                      {matches.map(({ card: match, score }) => (
+                        <li>
+                          <span>{match.name}</span>
+                          <span class="bar" aria-hidden="true">
+                            <span style={`width: ${Math.min(100, (score / MAX_SCORE) * 100)}%`} />
+                          </span>
+                          <span class="score">
+                            <span class="visually-hidden">score </span>
+                            {score.toFixed(1)}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )
+      }
+    </section>
+  </div>
+</Base>
+
+<script>
+  // Progressive enhancement: a live character count. The form works without it.
+  const idea = document.querySelector<HTMLTextAreaElement>("#idea");
+  const count = document.querySelector<HTMLElement>("[data-idea-count]");
+  if (idea && count) {
+    const update = () => {
+      count.textContent = `${idea.value.length}/${idea.maxLength}`;
+    };
+    idea.addEventListener("input", update);
+    update();
+  }
+</script>
