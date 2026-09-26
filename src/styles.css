@@ -27,10 +27,11 @@
     --at-divider: light-dark(oklch(20% 0.01 75 / 12%), oklch(95% 0.006 75 / 12%));
     --at-code-bg: light-dark(oklch(94% 0.008 75), oklch(19% 0.008 75));
 
-    /* Gold is ~3:1 on the light ground: fine for large headings and borders,
-       not small text. Small gold text uses the darker link gold in light. */
+    /* Gold measures under 3:1 on the light grounds (2.9 on the hero band and
+       callout), so text in light mode — headings included, unlike the course
+       site — uses the darker link gold. Gold stays for fills and borders. */
     --at-link: light-dark(#9a6b0b, var(--at-primary));
-    --at-heading: var(--at-primary);
+    --at-heading: var(--at-link);
     --at-accent: var(--at-primary);
     --at-accent-soft: light-dark(rgb(190 131 14 / 10%), rgb(190 131 14 / 14%));
     /* White on gold is ~3.3:1; dark text is ~5.5:1, in both schemes. */
@@ -161,6 +162,11 @@
     background: var(--at-bg);
     border: 1px solid var(--at-divider);
     border-radius: var(--at-border-radius);
+  }
+
+  ::placeholder {
+    color: var(--at-text-muted);
+    opacity: 1;
   }
 
   input:not([type="checkbox"]):focus,
@@ -489,6 +495,17 @@
     align-items: start;
   }
 
+  /* Grid items default to min-width: auto, so one long unbroken string
+     would widen the whole page; let them shrink and the text wrap. */
+  .board-layout > * {
+    min-width: 0;
+  }
+
+  .card,
+  .hero {
+    overflow-wrap: anywhere;
+  }
+
   @media (min-width: 64rem) {
     .board-layout {
       grid-template-columns: minmax(22rem, 26rem) 1fr;
@@ -502,9 +519,8 @@
     }
   }
 
-  .post-panel h2,
-  .board h2.section-title {
-    font-size: 1.375rem;
+  .post-panel h2 {
+    font-size: 1.5rem;
   }
 
   .post-form {
