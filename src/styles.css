@@ -17,24 +17,93 @@ a {
 
 form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-block: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
 }
 
-input {
-  flex: 1;
-  min-width: 12rem;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+input,
+textarea {
   padding: 0.4rem 0.6rem;
   font: inherit;
 }
 
+textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+}
+
+label.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: normal;
+}
+
 button {
+  align-self: flex-start;
   padding: 0.4rem 1rem;
   font: inherit;
 }
 
-#messages {
-  padding-inline-start: 1.2rem;
+.card {
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.card .meta {
+  color: #555;
+  margin-top: -0.5rem;
+}
+
+.card ul.tags,
+.card ul.blocks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0.25rem 0;
+  list-style: none;
+}
+
+.card ul.tags li,
+.card ul.blocks li {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  font-size: 0.85rem;
+}
+
+.card .matches {
+  margin-top: 0.75rem;
+  border-top: 1px dashed #ddd;
+  padding-top: 0.5rem;
+}
+
+.card .matches h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
 }

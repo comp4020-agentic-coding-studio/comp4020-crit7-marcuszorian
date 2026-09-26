@@ -1,8 +1,13 @@
 ---
-import { listMessages } from "../lib/db";
+import { listCards, rankMatches } from "../lib/db";
+import { BLOCKS, TAGS } from "../lib/schema";
 import "../styles.css";
 
-const messages = listMessages();
+const allCards = listCards();
+const board = allCards.map((card) => ({
+  card,
+  matches: rankMatches(allCards, card.id),
+}));
 ---
 
 <!doctype html>
@@ -10,44 +15,99 @@ const messages = listMessages();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>COMP4020 prototype</title>
+    <title>Study/project matches</title>
   </head>
   <body>
     <nav aria-label="site">
-      <a href="/">Guestbook</a>
+      <a href="/">Board</a>
       <a href="/readme/">About</a>
     </nav>
     <main>
-      <h1>Guestbook</h1>
+      <h1>Study/project matches</h1>
       <p>
-        A minimal full-stack starter: messages live in SQLite on the machine's
-        volume (state survives a reload and a redeploy), and new messages
-        appear in every open tab over a server-sent-events stream — open this
-        page twice and sign it in one. Replace all of this with your own
-        prototype.
+        Post a card with your course, idea, topic tags and weekly
+        availability. You'll see who you're actually compatible with below —
+        ranked by shared tags and overlapping availability, not just a flat
+        list.
       </p>
-      <form method="post" action="/api/messages">
-        <label for="body">Leave a message</label>
-        <input id="body" name="body" required maxlength="500" />
-        <button>Sign</button>
+
+      <form method="post" action="/api/cards">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" required maxlength="100" />
+        </div>
+        <div class="field">
+          <label for="contact">Contact</label>
+          <input id="contact" name="contact" required maxlength="100" placeholder="email or Discord handle" />
+        </div>
+        <div class="field">
+          <label for="courseCode">Course code</label>
+          <input id="courseCode" name="courseCode" required maxlength="20" placeholder="COMP4020" />
+        </div>
+        <div class="field">
+          <label for="idea">Idea</label>
+          <textarea id="idea" name="idea" required maxlength="280"></textarea>
+        </div>
+        <fieldset>
+          <legend>Topics</legend>
+          {
+            TAGS.map((tag) => (
+              <label class="checkbox">
+                <input type="checkbox" name="tags" value={tag} /> {tag}
+              </label>
+            ))
+          }
+        </fieldset>
+        <fieldset>
+          <legend>Availability</legend>
+          {
+            BLOCKS.map((block) => (
+              <label class="checkbox">
+                <input type="checkbox" name="blocks" value={block} /> {block}
+              </label>
+            ))
+          }
+        </fieldset>
+        <button>Post card</button>
       </form>
-      <ul id="messages">
-        {messages.map((message) => <li>{message.body}</li>)}
-      </ul>
+
+      <section aria-label="cards">
+        {
+          board.map(({ card, matches }) => (
+            <article class="card">
+              <h2>{card.name}</h2>
+              <p class="meta">
+                {card.contact} · {card.courseCode}
+              </p>
+              <p>{card.idea}</p>
+              <ul class="tags">
+                {card.tags.map((tag) => (
+                  <li>{tag}</li>
+                ))}
+              </ul>
+              <ul class="blocks">
+                {card.blocks.map((block) => (
+                  <li>{block}</li>
+                ))}
+              </ul>
+              <div class="matches">
+                <h3>Matches</h3>
+                {matches.length === 0 ? (
+                  <p>No matches yet.</p>
+                ) : (
+                  <ul>
+                    {matches.map(({ card: match, score }) => (
+                      <li>
+                        {match.name} — {score.toFixed(1)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </article>
+          ))
+        }
+      </section>
     </main>
-    <script>
-      // The live half of the demo: subscribe to the SSE stream and prepend
-      // messages as they arrive. The form itself needs none of this — its
-      // POST + redirect re-renders the submitting tab from SQLite; this
-      // stream is how every other tab finds out.
-      const list = document.querySelector("#messages");
-      const source = new EventSource("/api/events");
-      source.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = message.body;
-        list?.prepend(item);
-      });
-    </script>
   </body>
 </html>
