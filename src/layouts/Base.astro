@@ -1,0 +1,64 @@
+---
+// Shared page shell: head, skip link, nav, footer. Pages supply the single
+// h1 themselves — the README page's comes from README.md, so this adds none.
+import "@fontsource-variable/public-sans";
+import "@fontsource-variable/roboto-mono";
+import "../styles.css";
+
+interface Props {
+  title: string;
+  // Widen the content column past the 48rem reading measure (the board page).
+  wide?: boolean;
+}
+
+const { title, wide = false } = Astro.props;
+const path = Astro.url.pathname;
+const links = [
+  { href: "/", label: "Board" },
+  { href: "/readme/", label: "About" },
+];
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <nav class="site-nav" aria-label="site">
+      <div class:list={["layout", { wide }]}>
+        <div class="inner">
+          <a class="brand" href="/">Study<span>/</span>project matches</a>
+          <ul>
+            {
+              links.map(({ href, label }) => (
+                <li>
+                  <a href={href} aria-current={path === href ? "page" : undefined}>
+                    {label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <main id="main" class:list={["layout", { wide }]}>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class:list={["layout", { wide }]}>
+        <div class="inner">
+          <p>COMP4020 · a crit 7 prototype</p>
+          <p>
+            <a href="https://github.com/comp4020-agentic-coding-studio/comp4020-crit7-marcuszorian">Source on GitHub</a>
+          </p>
+        </div>
+      </div>
+      <div class="band"></div>
+    </footer>
+  </body>
+</html>
