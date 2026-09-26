@@ -21,4 +21,4 @@ CREATE TABLE `cards` (
 	`created_at` text DEFAULT (datetime('now')) NOT NULL
 );
 --> statement-breakpoint
-DROP TABLE `messages`;
+DROP TABLE IF EXISTS `messages`;
