@@ -192,6 +192,44 @@ describe("matches", () => {
   });
 });
 
+describe("course code suggestions", () => {
+  // The course code field suggests codes already on the board, so typing
+  // "COMP402" offers "COMP4020" — via a <datalist>, which the browser
+  // filters as you type.
+  const code = `SUGG${suffix.slice(-6)}`;
+
+  beforeAll(async () => {
+    for (const courseCode of [code.toLowerCase(), code]) {
+      const res = await postCard({
+        name: `Suggest ${courseCode} ${suffix}`,
+        contact: `s-${suffix}@example.com`,
+        courseCode,
+        idea: "Suggestion probe",
+        tags: ["other"],
+        blocks: ["weekend"],
+      });
+      expect(res.status).toBe(303);
+    }
+  });
+
+  function suggestions(doc: Document): string[] {
+    const input = doc.querySelector<HTMLInputElement>("input[name=courseCode]");
+    const listId = input?.getAttribute("list");
+    expect(listId, "courseCode input has a list attribute").toBeTruthy();
+    const datalist = doc.getElementById(listId!);
+    expect(datalist?.tagName).toBe("DATALIST");
+    return [...datalist!.querySelectorAll("option")].map((o) => o.value);
+  }
+
+  it("offers course codes already on the board, normalized", async () => {
+    expect(suggestions(await loadBoard())).toContain(code);
+  });
+
+  it("lists each code once", async () => {
+    expect(suggestions(await loadBoard()).filter((c) => c === code)).toHaveLength(1);
+  });
+});
+
 describe("validation", () => {
   const valid: CardInput = {
     name: `Valid ${suffix}`,
